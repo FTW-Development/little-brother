@@ -9,6 +9,7 @@
     "datetime":"0.0.3",
     "socket.io":"0.8.7",
     "hogan.js":"1.0.2",
+    "gravatar":"1.0.3",
     "underscore":"1.2.3" 
   }
 }

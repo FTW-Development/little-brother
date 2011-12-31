@@ -4,6 +4,7 @@ _ = require("underscore")
 express = require("express")
 hogan = require('hogan.js')
 http = require('http')
+gravatar = require('gravatar')
 
 
 #
@@ -80,16 +81,26 @@ get_tattles = (fn) ->
   #get last 50
   redis.lrange "little-brother:tattles",0,50, (err,tattle_ids) ->
     redis.mget _.map(tattle_ids, (id) -> "little-brother:tattle:#{id}"), (err,tattles_strings) ->
-      tattles=_.map(tattles_strings, (tattle_str) ->
-        JSON.parse(tattle_str))
-        #TODO: gravatar hash email
+      tattles=_.map tattles_strings, (tattle_str) ->
+        tattle = JSON.parse(tattle_str)
+        
+        # silly to do this for every customer.... but callbacks are complex
+        #redis.get "little-brother:customer-for-session:#{tattle.SessionId}", (err,customer_str) ->
+        #  if not tattle.Customer? and customer_str?
+        #      tattle.Customer = JSON.parse(customer_str)
+        #      tattle.LaterLoggedIn=true
+        
+        # gravatar hash email
+        if tattle.Customer?
+          tattle.Customer.ImageUrl = gravatar.url(tattle.Customer.Email, {s: '50', d: 'retro'})
+        
+        return tattle
         #      parse date
-        #      resolve sessions for customer
+          
       fn(tattles)
 #routes
 #
 app.get "/", (req, res) ->
-  console.log "#{__dirname}/views/app.html"
   res.sendfile "#{__dirname}/views/app.html"
 
 #
@@ -98,9 +109,8 @@ app.get "/", (req, res) ->
 io.sockets.on "connection", (socket) ->
   
   get_tattles (tattles) ->
-    console.log 'got connection', tattles
+    console.log 'got connection'
     _.each tattles, (tattle) ->
-      console.log 'sending tattle'
       socket.emit "little-brother:new-tattle", tattle
     
 

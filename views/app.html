@@ -25,20 +25,25 @@
     <script type="text/html" id="tattle">
       <li class="row">
         <div class="span6">
-          <h4>{{Path}} <span class="label category {{Category}}">{{Category}}</span></h4>
+          <p>{{Path}} <span class="label category {{Category}}">{{Category}}</span></p>
+          <p>
+            <span data-restaurant-id="{{Restaurant.RestaurantId}}">{{Restaurant.Name}}</span> 
+            <span data-territory-id="{{Territory.TerritoryId}}">{{Territory.TerritoryName}}</span>
+          </p>
           <p>{{Info}}</p>
-          
-          {{#Customer}}
-              <p>{{Customer.Name}} {{Customer.Email}} {{Customer.Phone}}</p>
-          {{/Customer}}
-          {{^Customer}}
-              <p>{{SessionId}}</p>
-          {{/Customer}}
-
         </div>
-        <div class="span6">
-          <h5 data-restaurant-id="{{Restaurant.RestaurantId}}">{{Restaurant.Name}}</h5>
-          <h6 data-territory-id="{{Territory.TerritoryId}}">{{Territory.TerritoryName}}</h6>
+        <div class="span6 row">
+          <div class="span3">
+            {{#Customer}}
+                <p>{{Customer.Name}} {{Customer.Email}} {{Customer.Phone}}</p>
+            {{/Customer}}
+            {{^Customer}}
+                <p>{{SessionId}}</p>
+            {{/Customer}}
+          </div>
+          <div class="span2">
+            <p><img src="{{Customer.ImageUrl}}" /></p>
+          </div>
         </div>
       </li>
     </script>
