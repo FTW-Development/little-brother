@@ -27,19 +27,20 @@ app.configure ->
   app.use express.bodyParser()
   #compile less and coffeescript
   app.use express.compiler(
-    src: __dirname + '/public'
+    src: "#{__dirname}/public"
     enable: ['coffeescript','less']
   )
   #serve static assets
-  app.use express.static(__dirname + '/public')
+  app.use express.static "#{__dirname}/public"
   #show stack trace since internal
   app.use express.errorHandler({ dumpExceptions: true, showStack: true })
   #use mustache for view engine
-  app.set 'views', __dirname + '/views'
+  app.set 'views',  "#{__dirname}/views"
   #view engine has to match file extension
-  app.set 'view engine', 'mustache'
+  app.set 'view engine', 'html'
   #setup mustache to be rendered by hogan
 	app.register('mustache',require('./hogan-express.js').init(hogan))
+  
 
 
 #socket setup
@@ -75,10 +76,7 @@ record_tattle = (json) ->
       #broadcast to connected clients
       io.sockets.emit "little-brother:new-tattle", json
 
-#routes
-#
-app.get "/", (req, res) ->
-
+get_tattles = (fn) ->
   #get last 50
   redis.lrange "little-brother:tattles",0,50, (err,tattle_ids) ->
     redis.mget _.map(tattle_ids, (id) -> "little-brother:tattle:#{id}"), (err,tattles_strings) ->
@@ -87,19 +85,24 @@ app.get "/", (req, res) ->
         #TODO: gravatar hash email
         #      parse date
         #      resolve sessions for customer
-        
-      console.log(tattles)
-      res.render "app", 
-         title: "Little Brother"
-         tattles: tattles
-       
+      fn(tattles)
+#routes
+#
+app.get "/", (req, res) ->
+  console.log "#{__dirname}/views/app.html"
+  res.sendfile "#{__dirname}/views/app.html"
 
 #
 #sockets
 #
 io.sockets.on "connection", (socket) ->
-  socket.on "little-brother:tattle-received", (json) ->
-    record_tattle json
+  
+  get_tattles (tattles) ->
+    console.log 'got connection', tattles
+    _.each tattles, (tattle) ->
+      console.log 'sending tattle'
+      socket.emit "little-brother:new-tattle", tattle
+    
 
 #start http app
 port = process.env.PORT or 5000
