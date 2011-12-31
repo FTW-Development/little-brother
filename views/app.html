@@ -14,16 +14,24 @@
     <script src="/jquery-1.7.1-min.js" ></script>
     <script src="/jquery-ui-1.8.16-min.js"></script>
     <script src="/jquery-mustache.js"></script>
+    <script src="/underscore-1.2.3-min.js"></script>
+    <script src="/bootstrap-twipsy-1.4.js"></script>
+    <script src="/bootstrap-popover-1.4.js"></script>
     <script src="/socket.io/socket.io.js"></script>
 
     <!-- app -->
     <link rel="stylesheet" type="text/css" href="/style.css" />
     <script src="/app.js"></script>
     
+    <style>
+      li.row{
+        border-bottom: 1px solid #F0F0F0;
+      }
+    </style>
     
     
     <script type="text/html" id="tattle">
-      <li class="row">
+      <li class="row" data-tattle-id="{{TattleId}}">
         <div class="span6">
           <p>{{Path}} <span class="label category {{Category}}">{{Category}}</span></p>
           <p>
@@ -35,18 +43,17 @@
         <div class="span6 row">
           <div class="span3">
             {{#Customer}}
-                <p>{{Customer.Name}} {{Customer.Email}} {{Customer.Phone}}
-                  {{#LaterLoggedIn}}
-                    <span class="label">Later Logged In</span>
-                  {{/LaterLoggedIn}}
-                </p>
+                <p>{{Customer.Name}} {{Customer.Email}} {{Customer.Phone}}</p>
             {{/Customer}}
             {{^Customer}}
                 <p>{{SessionId}}</p>
             {{/Customer}}
           </div>
           <div class="span2">
-            <p><img src="{{Customer.ImageUrl}}" /></p>
+            <img src="{{Customer.ImageUrl}}" />
+            {{#LaterLoggedIn}}
+              <span class="label">Later Logged In</span>
+            {{/LaterLoggedIn}}
           </div>
         </div>
       </li>

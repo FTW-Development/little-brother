@@ -14,3 +14,9 @@ socket.on "little-brother:new-tattle", (tattle)->
   html = $.mustache(template,tattle)
   $('#tattles').prepend(html)
 
+
+
+socket.on "little-brother:new-tattles", (tattles)->
+  _.each tattles, (tattle) ->
+    html = $.mustache(template,tattle)
+    $('#tattles').append(html)

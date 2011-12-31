@@ -93,9 +93,13 @@ get_tattles = (fn) ->
           customer = if customer_str? then JSON.parse(customer_str) else null
           lookup[pair[0]] = customer
         )
-        console.log(lookup)
-        tattles=_.map tattles, (tattle) -> 
         
+        tattles=_.map _.zip(tattle_ids,tattles), (p) -> 
+          tattle_id=p[0]
+          tattle=p[1]
+        
+          tattle.TattleId=tattle_id
+          
           #resolve people who logged in later
           if not tattle.Customer? and lookup[tattle.SessionId]?
             tattle.Customer = lookup[tattle.SessionId]
@@ -103,7 +107,7 @@ get_tattles = (fn) ->
         
           # gravatar hash email
           if tattle.Customer?
-            tattle.Customer.ImageUrl = gravatar.url(tattle.Customer.Email, {s: '50', d: 'retro'})
+            tattle.Customer.ImageUrl = gravatar.url(tattle.Customer.Email, {s: '35', d: 'retro'})
           
           #TODO: fmt/parse date
           
@@ -121,11 +125,9 @@ app.get "/", (req, res) ->
 #sockets
 #
 io.sockets.on "connection", (socket) ->
-  
   get_tattles (tattles) ->
     console.log 'got connection'
-    _.each tattles, (tattle) ->
-      socket.emit "little-brother:new-tattle", tattle
+    socket.emit "little-brother:new-tattles", tattles
     
 
 #start http app
