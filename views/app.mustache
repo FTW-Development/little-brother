@@ -13,8 +13,14 @@
   <ul>
   {{#tattles}}
     <li>
-    {{Path}}
-    {{SessionId}}
+      <h4><span class="category {{Category}}">{{Category}}</span><h4>
+      <p>{{Path}}</p>
+      <p>{{Info}}</p>
+      
+      <p>{{SessionId}}</p>
+      <p>{{Restaurant.Name}} {{Restaurant.RestaurantId}}</p>
+      <p>{{Territory.TerritoryName}} {{Territory.TerritoryId}}</p>
+      <p>{{Customer.Name}} {{Customer.Email}} {{Customer.Phone}}</p>
     </li>
   {{/tattles}}
   </ul>

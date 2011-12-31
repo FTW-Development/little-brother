@@ -57,19 +57,20 @@ record_tattle = (json) ->
     redis.set "little-brother:tattle:#{id}", msg, -> 
       #RPUSH @TATTLEID into TATTLES
       prefix = "little-brother:tattles"
-      redis.rpush "#{prefix}", id
+      redis.lpush "#{prefix}", id
       
       #RPUSH @TATTLEID into tattles list for each sort
-      redis.rpush "#{prefix}:by-session-id:#{json.SessionId}", id
-      redis.rpush "#{prefix}:by-category:#{json.Category}", id
-      redis.rpush "#{prefix}:by-path:#{json.Path}", id
-      redis.rpush( "#{prefix}:by-territory:#{json.Territory.TerritoryName}", id) if json.Territory?
-      redis.rpush( "#{prefix}:by-restaurant:#{json.Restaurant.Name}", id) if json.Restaurant?
+      redis.lpush "#{prefix}:by-session-id:#{json.SessionId}", id
+      redis.lpush "#{prefix}:by-category:#{json.Category}", id
+      redis.lpush "#{prefix}:by-path:#{json.Path}", id
+      redis.lpush( "#{prefix}:by-territory:#{json.Territory.TerritoryName}", id) if json.Territory?
+      redis.lpush( "#{prefix}:by-restaurant:#{json.Restaurant.Name}", id) if json.Restaurant?
       
       if json.Customer?
-        redis.rpush "#{prefix}:by-customer:#{json.Customer.Email}", id
+        redis.lpush "#{prefix}:by-customer:#{json.Customer.Email}", id
         #CORRELATE SESSIONID w/ USER if USER SET
         redis.sadd "little-brother:sessions-for-customer:#{json.Customer.Email}",json.SessionId
+        redis.set "little-brother:customer-for-session:#{json.SessionId}", JSON.stringify json.Customer
       
       #broadcast to connected clients
       io.sockets.emit "little-brother:new-tattle", json
@@ -79,9 +80,14 @@ record_tattle = (json) ->
 app.get "/", (req, res) ->
 
   #get last 50
-  redis.lrange "little-brother:tattles",-50,-1, (err,tattle_ids) ->
+  redis.lrange "little-brother:tattles",0,50, (err,tattle_ids) ->
     redis.mget _.map(tattle_ids, (id) -> "little-brother:tattle:#{id}"), (err,tattles_strings) ->
-      tattles=_.map(tattles_strings, (tattle_str) -> JSON.parse(tattle_str))
+      tattles=_.map(tattles_strings, (tattle_str) ->
+        JSON.parse(tattle_str))
+        #TODO: gravatar hash email
+        #      parse date
+        #      resolve sessions for customer
+        
       console.log(tattles)
       res.render "app", 
          title: "Little Brother"
