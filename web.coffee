@@ -81,23 +81,37 @@ get_tattles = (fn) ->
   #get last 50
   redis.lrange "little-brother:tattles",0,50, (err,tattle_ids) ->
     redis.mget _.map(tattle_ids, (id) -> "little-brother:tattle:#{id}"), (err,tattles_strings) ->
-      tattles=_.map tattles_strings, (tattle_str) ->
-        tattle = JSON.parse(tattle_str)
+      tattles=_.map tattles_strings, (tattle_str) -> tattle = JSON.parse(tattle_str)
+      
+      needCustomersForSessionIds = _(tattles).chain().filter( (t) -> not t.Customer? ).pluck("SessionId").uniq().value()
+      needCustomersForSessionKeys = _.map(needCustomersForSessionIds, (sid)->"little-brother:customer-for-session:#{sid}" )
+      
+      redis.mget needCustomersForSessionKeys, (err,customers) ->
+        lookup={}
+        _.each(_.zip(needCustomersForSessionIds,customers), (pair) ->
+          customer_str=pair[1]
+          customer = if customer_str? then JSON.parse(customer_str) else null
+          lookup[pair[0]] = customer
+        )
+        console.log(lookup)
+        tattles=_.map tattles, (tattle) -> 
         
-        # silly to do this for every customer.... but callbacks are complex
-        #redis.get "little-brother:customer-for-session:#{tattle.SessionId}", (err,customer_str) ->
-        #  if not tattle.Customer? and customer_str?
-        #      tattle.Customer = JSON.parse(customer_str)
-        #      tattle.LaterLoggedIn=true
+          #resolve people who logged in later
+          if not tattle.Customer? and lookup[tattle.SessionId]?
+            tattle.Customer = lookup[tattle.SessionId]
+            tattle.LaterLoggedIn = true
         
-        # gravatar hash email
-        if tattle.Customer?
-          tattle.Customer.ImageUrl = gravatar.url(tattle.Customer.Email, {s: '50', d: 'retro'})
-        
-        return tattle
-        #      parse date
+          # gravatar hash email
+          if tattle.Customer?
+            tattle.Customer.ImageUrl = gravatar.url(tattle.Customer.Email, {s: '50', d: 'retro'})
           
-      fn(tattles)
+          #TODO: fmt/parse date
+          
+          tattle
+         
+        fn(tattles)
+
+#
 #routes
 #
 app.get "/", (req, res) ->

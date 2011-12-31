@@ -35,7 +35,11 @@
         <div class="span6 row">
           <div class="span3">
             {{#Customer}}
-                <p>{{Customer.Name}} {{Customer.Email}} {{Customer.Phone}}</p>
+                <p>{{Customer.Name}} {{Customer.Email}} {{Customer.Phone}}
+                  {{#LaterLoggedIn}}
+                    <span class="label">Later Logged In</span>
+                  {{/LaterLoggedIn}}
+                </p>
             {{/Customer}}
             {{^Customer}}
                 <p>{{SessionId}}</p>
